@@ -21,6 +21,14 @@ app.get("/", function (req, res) {
   res.render("home", {homeStartingContent: homeStartingContent});
 });
 
+app.get("/about", function (req, res) {
+  res.render("about", {content: aboutContent});
+});
+
+app.get("/contact", function (req, res) {
+  res.render("contact", {content: contactContent});
+});
+
 const port = process.env.PORT || 3000
 app.listen(port, function () {
   console.log("Server started on port " + port);
