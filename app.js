@@ -2,6 +2,7 @@
 
 const express = require("express");
 const ejs = require("ejs");
+const _ = require("lodash"); //lodash can be resource intensive for whole libray. Use only if needed or choose select packages.
 
 const homeStartingContent =
   "Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.";
@@ -12,33 +13,53 @@ const contactContent =
 
 const app = express();
 
+const posts = [];
+
 app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 app.get("/", function (req, res) {
-  res.render("home", {homeStartingContent: homeStartingContent});
+  res.render("home", {
+    homeStartingContent: homeStartingContent,
+    posts: posts,
+  });
 });
 
 app.get("/about", function (req, res) {
-  res.render("about", {content: aboutContent});
+  res.render("about", { content: aboutContent });
 });
 
 app.get("/contact", function (req, res) {
-  res.render("contact", {content: contactContent});
+  res.render("contact", { content: contactContent });
 });
 
-app.get("/compose", function (req, res) {  
-    res.render("compose")
-})
+app.get("/compose", function (req, res) {
+  res.render("compose");
+});
 
-app.post("/compose", function (req, res) {  
-    let title = req.body.postTitle
-    console.log(title);
-})
+app.post("/compose", function (req, res) {
+  const post = {
+    title: req.body.postTitle,
+    content: req.body.postContent,
+  };
+  posts.push(post);
+  res.redirect("/");
+});
 
-const port = process.env.PORT || 3000
+app.get("/posts/:postName", function (req, res) {
+  const requestTitle = _.lowerCase(req.params.postName);
+
+  posts.forEach(function (post) {
+    const storedTitle = _.lowerCase(post.title);
+    if (storedTitle === requestTitle) {
+      res.render("post", { post: post });
+    }
+  });
+});
+
+const port = process.env.PORT || 3000;
 app.listen(port, function () {
   console.log("Server started on port " + port);
 });
