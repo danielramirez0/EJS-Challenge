@@ -29,6 +29,15 @@ app.get("/contact", function (req, res) {
   res.render("contact", {content: contactContent});
 });
 
+app.get("/compose", function (req, res) {  
+    res.render("compose")
+})
+
+app.post("/compose", function (req, res) {  
+    let title = req.body.postTitle
+    console.log(title);
+})
+
 const port = process.env.PORT || 3000
 app.listen(port, function () {
   console.log("Server started on port " + port);
