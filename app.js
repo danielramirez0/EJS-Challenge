@@ -1,6 +1,8 @@
 //jshint esversion:6
 
+require("dotenv").config();
 const express = require("express");
+const mongoose = require("mongoose");
 const ejs = require("ejs");
 const _ = require("lodash"); //lodash can be resource intensive for whole libray. Use only if needed or choose select packages.
 
@@ -12,18 +14,30 @@ const contactContent =
   "Scelerisque eleifend donec pretium vulputate sapien. Rhoncus urna neque viverra justo nec ultrices. Arcu dui vivamus arcu felis bibendum. Consectetur adipiscing elit duis tristique. Risus viverra adipiscing at in tellus integer feugiat. Sapien nec sagittis aliquam malesuada bibendum arcu vitae. Consequat interdum varius sit amet mattis. Iaculis nunc sed augue lacus. Interdum posuere lorem ipsum dolor sit amet consectetur adipiscing elit. Pulvinar elementum integer enim neque. Ultrices gravida dictum fusce ut placerat orci nulla. Mauris in aliquam sem fringilla ut morbi tincidunt. Tortor posuere ac ut consequat semper viverra nam libero.";
 
 const app = express();
-
-const posts = [];
-
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.static("public"));
 app.set("view engine", "ejs");
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.static("public"));
+const port = process.env.PORT || 3000;
+
+mongoose.connect(process.env.MONGO_CONNECTION);
+
+const postSchema = {
+  title: String,
+  content: String,
+};
+
+const Post = mongoose.model("Post", postSchema);
 
 app.get("/", function (req, res) {
-  res.render("home", {
-    homeStartingContent: homeStartingContent,
-    posts: posts,
+  Post.find({}, function (err, posts) {
+    if (!err) {
+      res.render("home", {
+        homeStartingContent: homeStartingContent,
+        posts: posts,
+      });
+    }
   });
 });
 
@@ -40,26 +54,29 @@ app.get("/compose", function (req, res) {
 });
 
 app.post("/compose", function (req, res) {
-  const post = {
+  const post = new Post({
     title: req.body.postTitle,
     content: req.body.postContent,
-  };
-  posts.push(post);
-  res.redirect("/");
+  });
+
+  post.save(function (err) {
+    if (!err) {
+      res.redirect("/");
+    } else {
+      console.log("Error during save");
+      res.redirect("/compose");
+    }
+  });
 });
 
-app.get("/posts/:postName", function (req, res) {
-  const requestTitle = _.lowerCase(req.params.postName);
-
-  posts.forEach(function (post) {
-    const storedTitle = _.lowerCase(post.title);
-    if (storedTitle === requestTitle) {
+app.get("/posts/:id", function (req, res) {
+  Post.findById(req.params.id, function (err, post) {
+    if (!err) {
       res.render("post", { post: post });
     }
   });
 });
 
-const port = process.env.PORT || 3000;
 app.listen(port, function () {
   console.log("Server started on port " + port);
 });
